@@ -3,52 +3,49 @@ package Lv1;
 public class VideoPlayerSolution {
 
     public static void main(String[] args) {
-        VideoPlayerSolution sol = new VideoPlayerSolution();
+        // 예시 입력값
+        String video_len = "01:00"; // 1분
+        String pos = "00:00";       // 시작 위치
+        String op_start = "00:10";  // 오프닝 시작
+        String op_end = "00:20";    // 오프닝 끝
+        String[] commands = {"next", "next", "next", "prev", "next"};
 
-        String result1 = sol.solution("10:55", "06:55", "00:05", "00:15", new String[]{"prev", "next", "next"});
-        System.out.println("테스트1 결과: " + result1); // 예상: 06:55
-
-        String result2 = sol.solution("07:22", "04:07", "04:05", "04:15", new String[]{"next"});
-        System.out.println("테스트2 결과: " + result2); // 예상: 04:15
-
-        String result3 = sol.solution("34:33", "02:55", "13:00", "00:55", new String[]{"next", "prev"});
-        System.out.println("테스트3 결과: " + result3); // 예상: 13:00
+        // 실행
+        String result = solution(video_len, pos, op_start, op_end, commands);
+        System.out.println("최종 위치: " + result);
     }
 
-    public String solution(String video_len, String pos, String op_start, String op_end, String[] commands) {
+    public static String solution(String video_len, String pos, String op_start, String op_end, String[] commands) {
         int videoLen = toSec(video_len);
         int now = toSec(pos);
         int opStart = toSec(op_start);
         int opEnd = toSec(op_end);
 
-        boolean isWrapped = opStart > opEnd;
-        if (isWrapped) opEnd += 86400;
-
-        int tempNow = now;
-        if (isWrapped && tempNow < opStart) tempNow += 86400;
-        if (tempNow >= opStart && tempNow <= opEnd) {
-            now = Math.min(opEnd % 86400, videoLen); // 초기 오프닝 점프
+        // 최초 위치도 오프닝 범위라면 바로 건너뛰기
+        if (now >= opStart && now <= opEnd) {
+            now = opEnd;
         }
 
         for (String cmd : commands) {
             if (cmd.equals("prev")) {
-                now = Math.max(0, now - 10);
-            } else {
+                now = Math.max(now - 10, 0);
+            } else { // cmd.equals("next")
                 now = Math.min(now + 10, videoLen);
             }
 
-            tempNow = now;
-            if (isWrapped && tempNow < opStart) tempNow += 86400;
-            if (tempNow >= opStart && tempNow <= opEnd) {
-                now = Math.min(opEnd % 86400, videoLen); // 반복 중 오프닝 점프
+            // 이동 후에도 오프닝 범위라면 건너뛰기
+            if (now >= opStart && now <= opEnd) {
+                now = opEnd;
             }
         }
 
         return String.format("%02d:%02d", now / 60, now % 60);
     }
 
-    private int toSec(String time) {
+    private static int toSec(String time) {
         String[] parts = time.split(":");
-        return Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
+        int mm = Integer.parseInt(parts[0]);
+        int ss = Integer.parseInt(parts[1]);
+        return mm * 60 + ss;
     }
 }
